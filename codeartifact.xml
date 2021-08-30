@@ -1,0 +1,23 @@
+<settings>
+    <profiles>
+        <profile>
+            <id>northvolt--data</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <repositories>
+                <repository>
+                    <id>northvolt--data</id>
+                    <url>https://northvolt-112243728910.d.codeartifact.eu-west-1.amazonaws.com/maven/data/</url>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+    <servers>
+        <server>
+            <id>northvolt--data</id>
+            <username>aws</username>
+            <password>${env.CODEARTIFACT_AUTH_TOKEN}</password>
+        </server>
+    </servers>
+</settings>
