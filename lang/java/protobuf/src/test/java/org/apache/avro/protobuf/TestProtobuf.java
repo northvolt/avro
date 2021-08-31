@@ -19,10 +19,12 @@ package org.apache.avro.protobuf;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
@@ -179,8 +181,29 @@ public class TestProtobuf {
 
     Schema s1 = ProtobufData.get().getSchema(d1);
     Schema s2 = ProtobufData.get().getSchema(d2);
-
     // s2 should be the same instance as s1 if caching worked
     assertSame(s1, s2);
+  }
+
+  @Test
+  public void testProto3Optional() throws Exception {
+    Descriptors.Descriptor d = CornucopiaTestOuterClass.CornucopiaTest.getDescriptor();
+    Schema s = ProtobufData.get().getSchema(d);
+
+    // Expected null union schemas:
+    Schema intUnion = Schema
+        .createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT)));
+    Schema floatUnion = Schema
+        .createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.FLOAT)));
+    Schema stringSchema = Schema.create(Schema.Type.STRING);
+    GenericData.setStringType(stringSchema, GenericData.StringType.String);
+    Schema stringUnion = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), stringSchema));
+    Schema intTypesUnion = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
+        ProtobufData.get().getSchema(CornucopiaTestOuterClass.CornucopiaTest.IntTypes.class)));
+
+    assertEquals(intUnion, s.getField("maybe_int").schema());
+    assertEquals(floatUnion, s.getField("maybe_float").schema());
+    assertEquals(stringUnion, s.getField("maybe_string").schema());
+    assertEquals(intTypesUnion, s.getField("it").schema());
   }
 }
