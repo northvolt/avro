@@ -20,6 +20,8 @@ package org.apache.avro.protobuf;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+import com.google.protobuf.DescriptorProtos;
+import com.google.protobuf.Descriptors;
 import org.apache.avro.Schema;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
@@ -29,14 +31,14 @@ import org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass;
 import org.apache.avro.specific.SpecificData;
 import org.apache.commons.compress.utils.Lists;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 import com.google.protobuf.ByteString;
 
 import org.apache.avro.protobuf.noopt.Test.Foo;
 import org.apache.avro.protobuf.noopt.Test.A;
 import org.apache.avro.protobuf.noopt.Test.M.N;
+
+import static org.junit.Assert.*;
 
 public class TestProtobuf {
   @Test
@@ -157,5 +159,28 @@ public class TestProtobuf {
     instance2.addLogicalTypeConversion(conversion);
     Schema s2 = instance2.getSchema(com.google.protobuf.Timestamp.class);
     assertEquals(conversion.getRecommendedSchema(), s2);
+  }
+
+  @Test
+  public void testSchemaCaching() throws Exception {
+    Descriptors.Descriptor d1 = NestedEnumOuterClass.SomeOuterMessage.getDescriptor();
+
+    // Take the descriptor to the byte world and back again
+    byte[] rawBytes = d1.getFile().toProto().toByteArray();
+    DescriptorProtos.FileDescriptorProto fdp = DescriptorProtos.FileDescriptorProto.parseFrom(rawBytes);
+    Descriptors.FileDescriptor fd = Descriptors.FileDescriptor.buildFrom(fdp, new Descriptors.FileDescriptor[] {});
+    Descriptors.Descriptor d2 = fd.findMessageTypeByName(d1.getName());
+
+    // There is no implemented equals method for Descriptors, which means it just
+    // checks if they are the same instance:
+    assertNotEquals(d1, d2);
+    // The proto representation has a custom equals method implemented though:
+    assertEquals(d1.toProto(), d2.toProto());
+
+    Schema s1 = ProtobufData.get().getSchema(d1);
+    Schema s2 = ProtobufData.get().getSchema(d2);
+
+    // s2 should be the same instance as s1 if caching worked
+    assertSame(s1, s2);
   }
 }

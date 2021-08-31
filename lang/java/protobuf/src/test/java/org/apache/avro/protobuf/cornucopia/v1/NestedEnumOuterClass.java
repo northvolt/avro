@@ -17,6 +17,20 @@ public final class NestedEnumOuterClass {
   public interface SomeOuterMessageOrBuilder extends
       // @@protoc_insertion_point(interface_extends:cornucopia.v1.SomeOuterMessage)
       com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>.cornucopia.v1.SomeOuterMessage.NestedEnum e = 1;</code>
+     * 
+     * @return The enum numeric value on the wire for e.
+     */
+    int getEValue();
+
+    /**
+     * <code>.cornucopia.v1.SomeOuterMessage.NestedEnum e = 1;</code>
+     * 
+     * @return The e.
+     */
+    org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.NestedEnum getE();
   }
 
   /**
@@ -33,6 +47,7 @@ public final class NestedEnumOuterClass {
     }
 
     private SomeOuterMessage() {
+      e_ = 0;
     }
 
     @java.lang.Override
@@ -62,6 +77,12 @@ public final class NestedEnumOuterClass {
           case 0:
             done = true;
             break;
+          case 8: {
+            int rawValue = input.readEnum();
+
+            e_ = rawValue;
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -207,6 +228,34 @@ public final class NestedEnumOuterClass {
       // @@protoc_insertion_point(enum_scope:cornucopia.v1.SomeOuterMessage.NestedEnum)
     }
 
+    public static final int E_FIELD_NUMBER = 1;
+    private int e_;
+
+    /**
+     * <code>.cornucopia.v1.SomeOuterMessage.NestedEnum e = 1;</code>
+     * 
+     * @return The enum numeric value on the wire for e.
+     */
+    @java.lang.Override
+    public int getEValue() {
+      return e_;
+    }
+
+    /**
+     * <code>.cornucopia.v1.SomeOuterMessage.NestedEnum e = 1;</code>
+     * 
+     * @return The e.
+     */
+    @java.lang.Override
+    public org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.NestedEnum getE() {
+      @SuppressWarnings("deprecation")
+      org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.NestedEnum result = org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.NestedEnum
+          .valueOf(e_);
+      return result == null
+          ? org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.NestedEnum.UNRECOGNIZED
+          : result;
+    }
+
     private byte memoizedIsInitialized = -1;
 
     @java.lang.Override
@@ -223,6 +272,10 @@ public final class NestedEnumOuterClass {
 
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      if (e_ != org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.NestedEnum.FOO
+          .getNumber()) {
+        output.writeEnum(1, e_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -233,6 +286,10 @@ public final class NestedEnumOuterClass {
         return size;
 
       size = 0;
+      if (e_ != org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.NestedEnum.FOO
+          .getNumber()) {
+        size += com.google.protobuf.CodedOutputStream.computeEnumSize(1, e_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -248,6 +305,8 @@ public final class NestedEnumOuterClass {
       }
       org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage other = (org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage) obj;
 
+      if (e_ != other.e_)
+        return false;
       if (!unknownFields.equals(other.unknownFields))
         return false;
       return true;
@@ -260,6 +319,8 @@ public final class NestedEnumOuterClass {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + E_FIELD_NUMBER;
+      hash = (53 * hash) + e_;
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -393,6 +454,8 @@ public final class NestedEnumOuterClass {
       @java.lang.Override
       public Builder clear() {
         super.clear();
+        e_ = 0;
+
         return this;
       }
 
@@ -419,6 +482,7 @@ public final class NestedEnumOuterClass {
       public org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage buildPartial() {
         org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage result = new org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage(
             this);
+        result.e_ = e_;
         onBuilt();
         return result;
       }
@@ -467,6 +531,9 @@ public final class NestedEnumOuterClass {
       public Builder mergeFrom(org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage other) {
         if (other == org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.getDefaultInstance())
           return this;
+        if (other.e_ != 0) {
+          setEValue(other.getEValue());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -492,6 +559,75 @@ public final class NestedEnumOuterClass {
             mergeFrom(parsedMessage);
           }
         }
+        return this;
+      }
+
+      private int e_ = 0;
+
+      /**
+       * <code>.cornucopia.v1.SomeOuterMessage.NestedEnum e = 1;</code>
+       * 
+       * @return The enum numeric value on the wire for e.
+       */
+      @java.lang.Override
+      public int getEValue() {
+        return e_;
+      }
+
+      /**
+       * <code>.cornucopia.v1.SomeOuterMessage.NestedEnum e = 1;</code>
+       * 
+       * @param value The enum numeric value on the wire for e to set.
+       * @return This builder for chaining.
+       */
+      public Builder setEValue(int value) {
+
+        e_ = value;
+        onChanged();
+        return this;
+      }
+
+      /**
+       * <code>.cornucopia.v1.SomeOuterMessage.NestedEnum e = 1;</code>
+       * 
+       * @return The e.
+       */
+      @java.lang.Override
+      public org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.NestedEnum getE() {
+        @SuppressWarnings("deprecation")
+        org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.NestedEnum result = org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.NestedEnum
+            .valueOf(e_);
+        return result == null
+            ? org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.NestedEnum.UNRECOGNIZED
+            : result;
+      }
+
+      /**
+       * <code>.cornucopia.v1.SomeOuterMessage.NestedEnum e = 1;</code>
+       * 
+       * @param value The e to set.
+       * @return This builder for chaining.
+       */
+      public Builder setE(
+          org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.SomeOuterMessage.NestedEnum value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+
+        e_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+
+      /**
+       * <code>.cornucopia.v1.SomeOuterMessage.NestedEnum e = 1;</code>
+       * 
+       * @return This builder for chaining.
+       */
+      public Builder clearE() {
+
+        e_ = 0;
+        onChanged();
         return this;
       }
 
@@ -552,14 +688,15 @@ public final class NestedEnumOuterClass {
 
   private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
   static {
-    java.lang.String[] descriptorData = { "\n\021nested_enum.proto\022\rcornucopia.v1\";\n\020So"
-        + "meOuterMessage\"\'\n\nNestedEnum\022\007\n\003FOO\020\000\022\007\n"
-        + "\003BAR\020\001\022\007\n\003BAZ\020\002B(\n&org.apache.avro.proto" + "buf.cornucopia.v1b\006proto3" };
+    java.lang.String[] descriptorData = { "\n\021nested_enum.proto\022\rcornucopia.v1\"r\n\020So"
+        + "meOuterMessage\0225\n\001e\030\001 \001(\0162*.cornucopia.v" + "1.SomeOuterMessage.NestedEnum\"\'\n\nNestedE"
+        + "num\022\007\n\003FOO\020\000\022\007\n\003BAR\020\001\022\007\n\003BAZ\020\002B(\n&org.ap"
+        + "ache.avro.protobuf.cornucopia.v1b\006proto3" };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_cornucopia_v1_SomeOuterMessage_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_cornucopia_v1_SomeOuterMessage_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_cornucopia_v1_SomeOuterMessage_descriptor, new java.lang.String[] {});
+        internal_static_cornucopia_v1_SomeOuterMessage_descriptor, new java.lang.String[] { "E", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

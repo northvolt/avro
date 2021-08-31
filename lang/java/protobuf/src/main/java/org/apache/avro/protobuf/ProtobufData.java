@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.IdentityHashMap;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import java.io.IOException;
@@ -45,6 +45,7 @@ import com.google.protobuf.Descriptors.EnumDescriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DescriptorProtos.FileOptions;
+import com.google.protobuf.DescriptorProtos.DescriptorProto;
 
 import org.apache.avro.util.ClassUtils;
 import org.apache.avro.util.internal.Accessor;
@@ -113,17 +114,18 @@ public class ProtobufData extends GenericData {
     }
   }
 
-  private final Map<Descriptor, FieldDescriptor[]> fieldCache = new ConcurrentHashMap<>();
+  private final Map<DescriptorProto, FieldDescriptor[]> fieldCache = new ConcurrentHashMap<>();
 
   @Override
   protected Object getRecordState(Object r, Schema s) {
     Descriptor d = ((MessageOrBuilder) r).getDescriptorForType();
-    FieldDescriptor[] fields = fieldCache.get(d);
+    DescriptorProto dp = d.toProto();
+    FieldDescriptor[] fields = fieldCache.get(dp);
     if (fields == null) { // cache miss
       fields = new FieldDescriptor[s.getFields().size()];
       for (Field f : s.getFields())
         fields[f.pos()] = d.findFieldByName(f.name());
-      fieldCache.put(d, fields); // update cache
+      fieldCache.put(dp, fields); // update cache
     }
     return fields;
   }
@@ -161,11 +163,12 @@ public class ProtobufData extends GenericData {
   @Override
   protected Schema getRecordSchema(Object record) {
     Descriptor descriptor = ((Message) record).getDescriptorForType();
-    Schema schema = schemaCache.get(descriptor);
+    DescriptorProto dp = descriptor.toProto();
+    Schema schema = schemaCache.get(dp);
 
     if (schema == null) {
       schema = getSchema(descriptor);
-      schemaCache.put(descriptor, schema);
+      schemaCache.put(dp, schema);
     }
     return schema;
   }
@@ -191,26 +194,28 @@ public class ProtobufData extends GenericData {
     return schema;
   }
 
-  private static final ThreadLocal<Map<Descriptor, Schema>> SEEN = ThreadLocal.withInitial(IdentityHashMap::new);
+  private static final ThreadLocal<Map<DescriptorProto, Schema>> SEEN = ThreadLocal.withInitial(HashMap::new);
 
   public Schema getSchema(Descriptor descriptor) {
-    Map<Descriptor, Schema> seen = SEEN.get();
-    if (seen.containsKey(descriptor)) // stop recursion
-      return seen.get(descriptor);
+    Map<DescriptorProto, Schema> seen = SEEN.get();
+    DescriptorProto dp = descriptor.toProto();
+    Schema result = seen.get(dp);
+    if (result != null) // stop recursion
+      return seen.get(dp);
     boolean first = seen.isEmpty();
 
     Conversion conversion = getConversionByDescriptor(descriptor);
     if (conversion != null) {
       Schema converted = conversion.getRecommendedSchema();
-      seen.put(descriptor, converted);
+      seen.put(dp, converted);
       return converted;
     }
 
     try {
-      Schema result = Schema.createRecord(descriptor.getName(), null,
+      result = Schema.createRecord(descriptor.getName(), null,
           getNamespace(descriptor.getFile(), descriptor.getContainingType()), false);
 
-      seen.put(descriptor, result);
+      seen.put(dp, result);
 
       List<Field> fields = new ArrayList<>(descriptor.getFields().size());
       for (FieldDescriptor f : descriptor.getFields())
