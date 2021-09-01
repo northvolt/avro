@@ -24,9 +24,11 @@ option java_package = "org.apache.avro.protobuf.cornucopia.v1";
 
 message SomeOuterMessage {
   // Enum named as camel case version of the file name
-  enum NestedEnum2 {
+  enum NestedEnum {
     FOO = 0;
     BAR = 1;
     BAZ = 2;
   }
+
+  NestedEnum e = 1;
 }

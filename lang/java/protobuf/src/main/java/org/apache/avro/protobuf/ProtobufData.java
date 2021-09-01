@@ -238,12 +238,6 @@ public class ProtobufData extends GenericData {
       }
     }
 
-    // Based on Java class generation described here:
-    // https://developers.google.com/protocol-buffers/docs/reference/java-generated#invocation
-    if (containsDefinitionWithName(fd, outer)) {
-      outer = outer + "OuterClass";
-    }
-
     StringBuilder inner = new StringBuilder();
     while (containing != null) {
       if (inner.length() == 0) {
@@ -271,27 +265,6 @@ public class ProtobufData extends GenericData {
     return s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
   }
 
-  private static Boolean containsDefinitionWithName(FileDescriptor fd, String name) {
-    if (fd.findMessageTypeByName(name) != null) {
-      return true;
-    }
-    if (fd.findEnumTypeByName(name) != null) {
-      return true;
-    }
-    if (fd.findServiceByName(name) != null) {
-      return true;
-    }
-    // Look for nested definitions:
-    for (Descriptor d : fd.getMessageTypes()) {
-      if (d.findNestedTypeByName(name) != null)
-        return true;
-      if (d.findEnumTypeByName(name) != null)
-        return true;
-    }
-
-    return false;
-  }
-
   private static final Schema NULL = Schema.create(Schema.Type.NULL);
 
   public Schema getSchema(FieldDescriptor f) {
@@ -305,40 +278,57 @@ public class ProtobufData extends GenericData {
     Schema result;
     switch (f.getType()) {
     case BOOL:
-      return Schema.create(Schema.Type.BOOLEAN);
+      result = Schema.create(Schema.Type.BOOLEAN);
+      break;
     case FLOAT:
-      return Schema.create(Schema.Type.FLOAT);
+      result = Schema.create(Schema.Type.FLOAT);
+      break;
     case DOUBLE:
-      return Schema.create(Schema.Type.DOUBLE);
+      result = Schema.create(Schema.Type.DOUBLE);
+      break;
     case STRING:
       Schema s = Schema.create(Schema.Type.STRING);
       GenericData.setStringType(s, GenericData.StringType.String);
-      return s;
+      result = s;
+      break;
     case BYTES:
-      return Schema.create(Schema.Type.BYTES);
+      result = Schema.create(Schema.Type.BYTES);
+      break;
     case INT32:
     case UINT32:
     case SINT32:
     case FIXED32:
     case SFIXED32:
-      return Schema.create(Schema.Type.INT);
+      result = Schema.create(Schema.Type.INT);
+      break;
     case INT64:
     case UINT64:
     case SINT64:
     case FIXED64:
     case SFIXED64:
-      return Schema.create(Schema.Type.LONG);
+      result = Schema.create(Schema.Type.LONG);
+      break;
     case ENUM:
-      return getSchema(f.getEnumType());
+      result = getSchema(f.getEnumType());
+      break;
     case MESSAGE:
       result = getSchema(f.getMessageType());
-      if (f.isOptional())
-        // wrap optional record fields in a union with null
-        result = Schema.createUnion(Arrays.asList(NULL, result));
-      return result;
+      break;
     case GROUP: // groups are deprecated
     default:
       throw new RuntimeException("Unexpected type: " + f.getType());
+    }
+    if (optionalAsNullUnion(f))
+      result = Schema.createUnion(Arrays.asList(NULL, result));
+    return result;
+  }
+
+  private boolean optionalAsNullUnion(FieldDescriptor f) {
+    if (f.getFile().getSyntax() == FileDescriptor.Syntax.PROTO3) {
+      return f.hasOptionalKeyword() || f.getType() == FieldDescriptor.Type.MESSAGE; // Wrap all optional fields in null
+                                                                                    // union for proto3
+    } else { // PROTO 2
+      return f.getType() == FieldDescriptor.Type.MESSAGE && f.isOptional(); // Only wrap optional messages in null union
     }
   }
 
@@ -374,6 +364,10 @@ public class ProtobufData extends GenericData {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
+    }
+
+    if (optionalAsNullUnion(f)) {
+      return NODES.nullNode();
     }
 
     switch (f.getType()) { // generate default for type

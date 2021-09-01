@@ -17,26 +17,27 @@
  */
 package org.apache.avro.protobuf;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.protobuf.cornucopia.v1.CornucopiaTestOuterClass;
-import org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass;
+import org.apache.avro.protobuf.noopt.Test.A;
+import org.apache.avro.protobuf.noopt.Test.Foo;
+import org.apache.avro.protobuf.noopt.Test.M.N;
 import org.apache.avro.specific.SpecificData;
 import org.apache.commons.compress.utils.Lists;
 import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-
-import com.google.protobuf.ByteString;
-
-import org.apache.avro.protobuf.noopt.Test.Foo;
-import org.apache.avro.protobuf.noopt.Test.A;
-import org.apache.avro.protobuf.noopt.Test.M.N;
 
 public class TestProtobuf {
   @Test
@@ -133,17 +134,6 @@ public class TestProtobuf {
   }
 
   @Test
-  public void testOuterClassNamespace() throws Exception {
-    // Message with same name as file:
-    Schema sm = ProtobufData.get().getSchema(CornucopiaTestOuterClass.CornucopiaTest.class);
-    assertEquals(org.apache.avro.protobuf.cornucopia.v1.CornucopiaTestOuterClass.class.getName(), sm.getNamespace());
-
-    // Nested Enum with same name as file
-    Schema se = ProtobufData.get().getSchema(NestedEnumOuterClass.SomeOuterMessage.class);
-    assertEquals(org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.class.getName(), se.getNamespace());
-  }
-
-  @Test
   public void testGetNonRepeatedSchemaWithLogicalType() throws Exception {
     ProtoConversions.TimestampMillisConversion conversion = new ProtoConversions.TimestampMillisConversion();
 
@@ -157,5 +147,27 @@ public class TestProtobuf {
     instance2.addLogicalTypeConversion(conversion);
     Schema s2 = instance2.getSchema(com.google.protobuf.Timestamp.class);
     assertEquals(conversion.getRecommendedSchema(), s2);
+  }
+
+  @Test
+  public void testProto3Optional() throws Exception {
+    Descriptors.Descriptor d = CornucopiaTestOuterClass.CornucopiaTest.getDescriptor();
+    Schema s = ProtobufData.get().getSchema(d);
+
+    // Expected null union schemas:
+    Schema intUnion = Schema
+        .createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT)));
+    Schema floatUnion = Schema
+        .createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.FLOAT)));
+    Schema stringSchema = Schema.create(Schema.Type.STRING);
+    GenericData.setStringType(stringSchema, GenericData.StringType.String);
+    Schema stringUnion = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), stringSchema));
+    Schema intTypesUnion = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
+        ProtobufData.get().getSchema(CornucopiaTestOuterClass.CornucopiaTest.IntTypes.class)));
+
+    assertEquals(intUnion, s.getField("maybe_int").schema());
+    assertEquals(floatUnion, s.getField("maybe_float").schema());
+    assertEquals(stringUnion, s.getField("maybe_string").schema());
+    assertEquals(intTypesUnion, s.getField("it").schema());
   }
 }
