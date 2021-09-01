@@ -1,0 +1,26 @@
+name: release
+on:
+  release:
+    types: [published]
+
+defaults:
+  run:
+    working-directory: lang/java/protobuf
+
+jobs:
+  Deploy:
+    name: Java Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '8'
+      - name: Deploy
+        run: mvn deploy -DaltSnapshotDeploymentRepository=codeartifact::default::https://northvolt-112243728910.d.codeartifact.eu-west-1.amazonaws.com/maven/data/
+
+
+

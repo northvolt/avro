@@ -1,0 +1,90 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package cornucopia.v1;
+
+option java_package = "org.apache.avro.protobuf.cornucopia.v1";
+
+import "google/protobuf/timestamp.proto";
+
+// a cornucopia of types
+message CornucopiaTest {
+  // A comment about a field
+  bool a_bool = 1;
+
+  message IntTypes {
+    // A comment about a nested field
+    int32 a_int32 = 1;
+    int64 a_int64 = 2;
+    optional sint32 a_sint32 = 3;
+    sint64 a_sint64 = 4;
+    sfixed32 a_sfixed32 = 5;
+    sfixed64 a_sfixed64 = 6;
+  }
+  IntTypes it = 2;
+
+  message FloatTypes {
+    float a_float = 1;
+    double a_double = 2;
+  }
+  FloatTypes ft = 3;
+
+  message StringTypes {
+    string a_string = 1;
+    bytes a_bytes = 2;
+  }
+  StringTypes st = 4;
+
+  enum Reson {
+    FOO = 0;
+    BAR = 1;
+    BAZ = 2;
+  }
+  Reson a_enum = 5;
+
+  reserved 6 to 8;
+  message ArrayTypes {
+    repeated int32 ints = 1;
+    repeated string strs = 2;
+  }
+  ArrayTypes at = 9;
+  repeated ArrayTypes ats = 10;
+
+  message TimestampTypes {
+    string timestamp_str = 1;
+    int64 timestamp_millis = 2;
+    int64 timestamp_micros = 3;
+    int64 timestamp_nanos = 4;
+    google.protobuf.Timestamp timestamp_ts = 5;
+  }
+  TimestampTypes tt = 12;
+
+  message MapTypes {
+    map<string, string> str_str_map = 1;
+    map<string, int32> str_int_map = 2;
+    map<int32, string> int_str_map = 3;
+    map<int32, int32> int_int_map = 4;
+  }
+  MapTypes mt = 13;
+
+  optional int32 maybe_int = 14;
+  optional float maybe_float = 15;
+  optional string maybe_string = 16;
+}
