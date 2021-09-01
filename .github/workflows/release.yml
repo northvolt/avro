@@ -11,6 +11,10 @@ jobs:
   Deploy:
     name: Java Deploy
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.CODEARTIFACT_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.CODEARTIFACT_AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: eu-west-1
 
     steps:
       - uses: actions/checkout@v2
@@ -19,6 +23,9 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '8'
+      - name: Get codeartifact token
+        run: |
+          echo "CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain northvolt  --domain-owner 112243728910 --query authorizationToken --output text)" >> $GITHUB_ENV
       - name: Deploy
         run: mvn deploy -DaltSnapshotDeploymentRepository=codeartifact::default::https://northvolt-112243728910.d.codeartifact.eu-west-1.amazonaws.com/maven/data/
 
