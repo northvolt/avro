@@ -267,9 +267,24 @@ public class ProtobufData extends GenericData {
 
   private static final Schema NULL = Schema.create(Schema.Type.NULL);
 
+  private static boolean isStrMap(FieldDescriptor f) {
+    // Avro maps have only a value type, since the key must be a string whereas
+    // protobuf maps can support other key types (eg, map<int32, string>);
+    // string-keyed maps can be converted into an Avro map<value>, whereas other
+    // types will need to fall back to array<record<key, value>>
+    return f.isMapField() && f.getMessageType().getFields().get(0).getType() == FieldDescriptor.Type.STRING;
+  };
+
+  private Schema convertMap(FieldDescriptor f) {
+    return Schema.createMap(getSchema(f.getMessageType().getFields().get(1)));
+  }
+
   public Schema getSchema(FieldDescriptor f) {
+    if (isStrMap(f))
+      return convertMap(f);
+
     Schema s = getNonRepeatedSchema(f);
-    if (f.isRepeated())
+    if (f.isRepeated() && !isStrMap(f))
       s = Schema.createArray(s);
     return s;
   }
@@ -347,6 +362,9 @@ public class ProtobufData extends GenericData {
   private JsonNode getDefault(FieldDescriptor f) {
     if (f.isRequired()) // no default
       return null;
+
+    if (isStrMap(f))
+      return NODES.objectNode();
 
     if (f.isRepeated()) // empty array as repeated fields' default value
       return NODES.arrayNode();
