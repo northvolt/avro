@@ -17,6 +17,7 @@
  */
 package org.apache.avro.protobuf;
 
+import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Timestamp;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
@@ -61,6 +62,40 @@ public class ProtoConversions {
     @Override
     public Long toLong(Timestamp value, Schema schema, LogicalType type) {
       return ProtoConversions.toLong(value, TimestampPrecise.Millis);
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+    }
+  }
+
+  public static class DynamicTimestampMillisConversion extends Conversion<DynamicMessage> {
+    @Override
+    public Class<DynamicMessage> getConvertedType() {
+      return DynamicMessage.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "timestamp-millis";
+    }
+
+    @Override
+    public DynamicMessage fromLong(Long millisFromEpoch, Schema schema, LogicalType type)
+        throws IllegalArgumentException {
+      Timestamp ts = ProtoConversions.fromLong(millisFromEpoch, TimestampPrecise.Millis);
+      return DynamicMessage.newBuilder(ts).build();
+    }
+
+    @Override
+    public Long toLong(DynamicMessage value, Schema schema, LogicalType type) {
+      try {
+        Timestamp ts = Timestamp.parseFrom(value.toByteArray());
+        return ProtoConversions.toLong(ts, TimestampPrecise.Millis);
+      } catch (Exception e) {
+        return 0L;
+      }
     }
 
     @Override
