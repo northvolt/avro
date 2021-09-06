@@ -170,4 +170,22 @@ public class TestProtobuf {
     assertEquals(stringUnion, s.getField("maybe_string").schema());
     assertEquals(intTypesUnion, s.getField("it").schema());
   }
+
+  @Test
+  public void testStrMap() throws Exception {
+    Descriptors.Descriptor d = CornucopiaTestOuterClass.CornucopiaTest.getDescriptor();
+    // get the non-null part of the union schema for this type
+    Schema s = ProtobufData.get().getSchema(d).getField("mt").schema().getTypes().get(1);
+
+    Schema ss = Schema.create(Schema.Type.STRING);
+    GenericData.setStringType(ss, GenericData.StringType.String);
+
+    Schema strStrMap = Schema.createMap(ss);
+    Schema strIntMap = Schema.createMap(Schema.create(Schema.Type.INT));
+
+    assertEquals(strStrMap, s.getField("str_str_map").schema());
+    assertEquals(strIntMap, s.getField("str_int_map").schema());
+    assertEquals(Schema.Type.ARRAY, s.getField("int_str_map").schema().getType());
+    assertEquals(Schema.Type.ARRAY, s.getField("int_int_map").schema().getType());
+  }
 }
