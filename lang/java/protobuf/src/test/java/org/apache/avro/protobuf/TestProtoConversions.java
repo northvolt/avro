@@ -18,6 +18,7 @@
 
 package org.apache.avro.protobuf;
 
+import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Timestamp;
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -26,6 +27,7 @@ import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.protobuf.ProtoConversions.TimestampMicrosConversion;
 import org.apache.avro.protobuf.ProtoConversions.TimestampMillisConversion;
+import org.apache.avro.protobuf.ProtoConversions.DynamicTimestampMillisConversion;
 import org.apache.avro.reflect.ReflectData;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -138,6 +140,39 @@ public class TestProtoConversions {
     TimestampMicrosConversion conversion = new TimestampMicrosConversion();
     long exceeded = (ProtoConversions.SECONDS_UPPERLIMIT + 1) * 1000000;
     conversion.fromLong(exceeded, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
+  }
+
+  @Test
+  public void testDynamicTimestampMillisConversion() throws Exception {
+    DynamicTimestampMillisConversion conversion = new DynamicTimestampMillisConversion();
+    Timestamp May_28_2015_21_46_53_221_ts = Timestamp.newBuilder().setSeconds(1432849613L).setNanos(221000000).build();
+    Timestamp Jan_2_1900_3_4_5_678_ts = Timestamp.newBuilder().setSeconds(-2208891355L).setNanos(678000000).build();
+
+    DynamicMessage dm1 = DynamicMessage.parseFrom(May_28_2015_21_46_53_221_ts.getDescriptorForType(),
+        May_28_2015_21_46_53_221_ts.toByteArray());
+    DynamicMessage dm2 = DynamicMessage.parseFrom(Jan_2_1900_3_4_5_678_ts.getDescriptorForType(),
+        Jan_2_1900_3_4_5_678_ts.toByteArray());
+
+    long instant = May_28_2015_21_46_53_221.getTimeInMillis();
+    DynamicMessage tsFromInstant = conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA,
+        LogicalTypes.timestampMillis());
+    long roundTrip = conversion.toLong(tsFromInstant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+
+    Assert.assertEquals("Round-trip conversion should work", instant, roundTrip);
+    Assert.assertEquals("Known timestamp should be correct", May_28_2015_21_46_53_221_ts,
+        conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+    Assert.assertEquals("Known timestamp should be correct", instant,
+        (long) conversion.toLong(dm1, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+
+    instant = Jan_2_1900_3_4_5_678.getTimeInMillis();
+    tsFromInstant = conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+    roundTrip = conversion.toLong(tsFromInstant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+
+    Assert.assertEquals("Round-trip conversion should work", instant, roundTrip);
+    Assert.assertEquals("Known timestamp should be correct", Jan_2_1900_3_4_5_678_ts,
+        conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+    Assert.assertEquals("Known timestamp should be correct", instant,
+        (long) conversion.toLong(dm2, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
   }
 
   /*
