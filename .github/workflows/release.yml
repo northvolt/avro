@@ -3,10 +3,6 @@ on:
   release:
     types: [published]
 
-defaults:
-  run:
-    working-directory: lang/java/protobuf
-
 jobs:
   Deploy:
     name: Java Deploy
@@ -26,8 +22,8 @@ jobs:
       - name: Get codeartifact token
         run: |
           echo "CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain northvolt  --domain-owner 112243728910 --query authorizationToken --output text)" >> $GITHUB_ENV
-      - name: Deploy
-        run: mvn -s ../../../codeartifact.xml deploy -DaltSnapshotDeploymentRepository=northvolt--data::default::https://northvolt-112243728910.d.codeartifact.eu-west-1.amazonaws.com/maven/data/
+      - name: deploy root
+        run: mvn -s codeartifact.xml deploy -DaltSnapshotDeploymentRepository=northvolt--data::default::https://northvolt-112243728910.d.codeartifact.eu-west-1.amazonaws.com/maven/data/
 
 
 
