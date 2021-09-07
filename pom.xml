@@ -445,6 +445,10 @@
                 <exclude>lang/java/tools/src/main/resources/META-INF/cddl-1.0.text</exclude>
                 <exclude>lang/java/tools/src/main/resources/META-INF/cddl-1.1.text</exclude>
                 <exclude>lang/java/tools/src/main/resources/META-INF/mpl-2.0.text</exclude>
+
+                <!-- local files -->
+                <exclude>codeartifact.xml</exclude>
+                <exclude>.github/**</exclude>
               </excludes>
             </configuration>
           </plugin>
