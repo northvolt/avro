@@ -23,7 +23,7 @@ jobs:
         run: |
           echo "CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain northvolt  --domain-owner 112243728910 --query authorizationToken --output text)" >> $GITHUB_ENV
       - name: deploy root
-        run: mvn -s codeartifact.xml deploy -DaltSnapshotDeploymentRepository=northvolt--data::default::https://northvolt-112243728910.d.codeartifact.eu-west-1.amazonaws.com/maven/data/
+        run: mvn -s codeartifact.xml deploy -DaltDeploymentRepository=northvolt--data::default::https://northvolt-112243728910.d.codeartifact.eu-west-1.amazonaws.com/maven/data/
 
 
 
