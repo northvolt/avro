@@ -19,8 +19,11 @@ package org.apache.avro.protobuf;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.DynamicMessage;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
@@ -35,9 +38,9 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.*;
 
 public class TestProtobuf {
   @Test
@@ -187,5 +190,35 @@ public class TestProtobuf {
     assertEquals(strIntMap, s.getField("str_int_map").schema());
     assertEquals(Schema.Type.ARRAY, s.getField("int_str_map").schema().getType());
     assertEquals(Schema.Type.ARRAY, s.getField("int_int_map").schema().getType());
+  }
+
+  @Test
+  public void testStrMapDatumWriting() throws Exception {
+    CornucopiaTestOuterClass.CornucopiaTest.MapTypes mt = CornucopiaTestOuterClass.CornucopiaTest.MapTypes.newBuilder()
+        .putIntIntMap(42, 1).putStrIntMap("Foo", 42).putStrStrMap("Bar", "Baz").putIntStrMap(0, "Bazoo").build();
+
+    CornucopiaTestOuterClass.CornucopiaTest c = CornucopiaTestOuterClass.CornucopiaTest.newBuilder().setMt(mt).build();
+
+    DynamicMessage dm = DynamicMessage.parseFrom(c.getDescriptorForType(), c.toByteArray());
+
+    Schema s = ProtobufData.get().getSchema(c.getDescriptorForType());
+    ProtobufDatumWriter<DynamicMessage> w = new ProtobufDatumWriter<>(s);
+
+    ByteArrayOutputStream os = new ByteArrayOutputStream();
+    Encoder e = EncoderFactory.get().binaryEncoder(os, null);
+    w.write(dm, e);
+    e.flush();
+
+    ProtobufDatumReader<DynamicMessage> protoDatumReader = new ProtobufDatumReader<>(s);
+    GenericDatumReader<GenericRecord> genericReader = new GenericDatumReader<>(protoDatumReader.getSchema());
+    GenericRecord gr = genericReader.read(null,
+        DecoderFactory.get().binaryDecoder(new ByteArrayInputStream(os.toByteArray()), null));
+
+    assertEquals(gr.getSchema(), s);
+
+    assertTrue(((GenericData.Record) gr.get("mt")).get("str_int_map") instanceof HashMap);
+    assertTrue(((GenericData.Record) gr.get("mt")).get("str_str_map") instanceof HashMap);
+    assertTrue(((GenericData.Record) gr.get("mt")).get("int_str_map") instanceof GenericData.Array);
+    assertTrue(((GenericData.Record) gr.get("mt")).get("int_int_map") instanceof GenericData.Array);
   }
 }

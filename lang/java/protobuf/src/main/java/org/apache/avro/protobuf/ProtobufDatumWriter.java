@@ -18,7 +18,13 @@
 package org.apache.avro.protobuf;
 
 import java.io.IOException;
+import java.util.AbstractMap;
+import java.util.ConcurrentModificationException;
+import java.util.List;
 
+import com.google.protobuf.Descriptors;
+import com.google.protobuf.DynamicMessage;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Encoder;
@@ -65,4 +71,46 @@ public class ProtobufDatumWriter<T> extends GenericDatumWriter<T> {
     out.writeBytes(bytes.toByteArray(), 0, bytes.size());
   }
 
+  @Override
+  protected void writeMap(Schema schema, Object datum, Encoder out) throws IOException {
+    if (datum instanceof List<?> && ((List<?>) datum).size() > 0
+        && ((List<?>) datum).get(0) instanceof DynamicMessage) {
+      List<?> mapRecords = (List<?>) datum;
+      Schema value = schema.getValueType();
+
+      int size = mapRecords.size();
+      int actualSize = 0;
+      out.writeMapStart();
+      out.setItemCount(size);
+      for (Object entry : mapRecords) {
+        AbstractMap.SimpleEntry<String, Object> r = getStrMapRecord(entry);
+        out.startItem();
+        writeString(r.getKey(), out);
+        write(value, r.getValue(), out);
+        actualSize++;
+      }
+      out.writeMapEnd();
+      if (actualSize != size) {
+        throw new ConcurrentModificationException(
+            "Size of map written was " + size + ", but number of entries written was " + actualSize + ". ");
+      }
+    } else {
+      super.writeMap(schema, datum, out);
+    }
+  }
+
+  private AbstractMap.SimpleEntry<String, Object> getStrMapRecord(Object mapRecord) {
+    if (mapRecord instanceof DynamicMessage) {
+      DynamicMessage dm = (DynamicMessage) mapRecord;
+      if (dm.getDescriptorForType().getOptions().hasMapEntry()
+          && dm.getDescriptorForType().getOptions().getMapEntry()) {
+        Descriptors.FieldDescriptor keyDesc = dm.getDescriptorForType().getFields().get(0);
+        Descriptors.FieldDescriptor valDesc = dm.getDescriptorForType().getFields().get(1);
+        if (keyDesc.getType() == Descriptors.FieldDescriptor.Type.STRING) {
+          return new AbstractMap.SimpleEntry<>(dm.getField(keyDesc).toString(), dm.getField(valDesc));
+        }
+      }
+    }
+    throw new AvroRuntimeException("Not a string map record: " + mapRecord);
+  }
 }
