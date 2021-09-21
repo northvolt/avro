@@ -109,6 +109,10 @@ public class ProtobufData extends GenericData {
       if (!f.isRepeated() && !m.hasField(f))
         return null;
     default:
+      // if this field was explicitly declared optional, check whether it was set, and
+      // return null if not
+      if (optionalAsNullUnion(f) && !f.isRepeated() && !m.hasField(f))
+        return null;
       return m.getField(f);
     }
   }
