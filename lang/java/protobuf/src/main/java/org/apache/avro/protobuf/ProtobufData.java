@@ -111,7 +111,7 @@ public class ProtobufData extends GenericData {
     default:
       // if this field was explicitly declared optional, check whether it was set, and
       // return null if not
-      if (optionalAsNullUnion(f) && !f.isRepeated() && !m.hasField(f))
+      if (optionalAsNullUnion(f) && !m.hasField(f))
         return null;
       return m.getField(f);
     }
@@ -343,11 +343,15 @@ public class ProtobufData extends GenericData {
   }
 
   private boolean optionalAsNullUnion(FieldDescriptor f) {
+    // for proto3 (>= 3.15) with explicit optional keyword
     if (f.getFile().getSyntax() == FileDescriptor.Syntax.PROTO3) {
-      return f.hasOptionalKeyword() || f.getType() == FieldDescriptor.Type.MESSAGE; // Wrap all optional fields in null
-                                                                                    // union for proto3
-    } else { // PROTO 2
-      return f.getType() == FieldDescriptor.Type.MESSAGE && f.isOptional(); // Only wrap optional messages in null union
+      // the protobuf API doesn't support hasField() on repeated fields, so there
+      // isn't a meaningful optional case for them - otherwise, messages are always
+      // nullable, and scalars explicitly marked optional are optional
+      return !f.isRepeated() && (f.hasOptionalKeyword() || f.getType() == FieldDescriptor.Type.MESSAGE);
+    } else {
+      // for proto2, which always supported optional
+      return f.getType() == FieldDescriptor.Type.MESSAGE && f.isOptional();
     }
   }
 
