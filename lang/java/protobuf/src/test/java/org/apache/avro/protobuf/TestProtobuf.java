@@ -175,6 +175,55 @@ public class TestProtobuf {
   }
 
   @Test
+  public void testProto3OptionalRoundTrip() throws Exception {
+    // test that set optional fields round-trip correctly
+    CornucopiaTestOuterClass.CornucopiaTest ct = CornucopiaTestOuterClass.CornucopiaTest.newBuilder().setMaybeInt(5)
+        .setMaybeString("hello").setMaybeFloat(42.0f).build();
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    ProtobufDatumWriter<CornucopiaTestOuterClass.CornucopiaTest> w = new ProtobufDatumWriter<>(
+        CornucopiaTestOuterClass.CornucopiaTest.class);
+    Encoder e = EncoderFactory.get().binaryEncoder(bao, null);
+    w.write(ct, e);
+    e.flush();
+    Schema s = ProtobufData.get().getSchema(ct.getDescriptorForType());
+    ProtobufDatumReader<DynamicMessage> protoDatumReader = new ProtobufDatumReader<>(s);
+    GenericDatumReader<GenericRecord> genericReader = new GenericDatumReader<>(protoDatumReader.getSchema());
+    GenericRecord gr = genericReader.read(null,
+        DecoderFactory.get().binaryDecoder(new ByteArrayInputStream(bao.toByteArray()), null));
+
+    assertEquals(ct.getMaybeInt(), gr.get("maybe_int"));
+    assertEquals(ct.hasMaybeInt(), gr.get("maybe_int") != null);
+    assertEquals(ct.getMaybeString(), gr.get("maybe_string"));
+    assertEquals(ct.hasMaybeString(), gr.get("maybe_string") != null);
+    assertEquals(ct.getMaybeFloat(), gr.get("maybe_float"));
+    assertEquals(ct.hasMaybeFloat(), gr.get("maybe_float") != null);
+  }
+
+  @Test
+  public void testProto3OptionalNull() throws Exception {
+    // test that unset optional fields end up as null, not scalar default
+    CornucopiaTestOuterClass.CornucopiaTest ct = CornucopiaTestOuterClass.CornucopiaTest.newBuilder().build();
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    ProtobufDatumWriter<CornucopiaTestOuterClass.CornucopiaTest> w = new ProtobufDatumWriter<>(
+        CornucopiaTestOuterClass.CornucopiaTest.class);
+    Encoder e = EncoderFactory.get().binaryEncoder(bao, null);
+    w.write(ct, e);
+    e.flush();
+    Schema s = ProtobufData.get().getSchema(ct.getDescriptorForType());
+    ProtobufDatumReader<DynamicMessage> protoDatumReader = new ProtobufDatumReader<>(s);
+    GenericDatumReader<GenericRecord> genericReader = new GenericDatumReader<>(protoDatumReader.getSchema());
+    GenericRecord gr = genericReader.read(null,
+        DecoderFactory.get().binaryDecoder(new ByteArrayInputStream(bao.toByteArray()), null));
+
+    // unset optional fields shall be null
+    assertEquals(gr.get("maybe_int"), null);
+    assertEquals(gr.get("maybe_string"), null);
+    assertEquals(gr.get("maybe_float"), null);
+    // but unset non-optional fields return their default value
+    assertEquals(gr.get("a_bool"), ct.getABool());
+  }
+
+  @Test
   public void testStrMap() throws Exception {
     Descriptors.Descriptor d = CornucopiaTestOuterClass.CornucopiaTest.getDescriptor();
     // get the non-null part of the union schema for this type
